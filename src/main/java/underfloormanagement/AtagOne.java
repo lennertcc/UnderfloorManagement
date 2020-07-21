@@ -2,7 +2,6 @@ package underfloormanagement;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.juurlink.atagone.AtagOneConnectorFactory;
 import org.juurlink.atagone.AtagOneConnectorInterface;
 import org.juurlink.atagone.domain.Configuration;
