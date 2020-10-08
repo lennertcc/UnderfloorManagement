@@ -1,66 +1,132 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package underfloormanagement;
 
 import java.io.IOException;
+import java.lang.Thread.State;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.TimeZone;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-
+import java.util.logging.SimpleFormatter;
 
 /**
+ *
  * @author lenne
  */
 public class UnderfloorManagement {
-
-    private static final Logger logger = Logger.getLogger(UnderfloorManagement.class.getName());
-    
     /**
      * @param args the command line arguments
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Amsterdam"));
+
+        Handler fileHandler = new FileHandler("errors.log");
+        fileHandler.setFormatter(new SimpleFormatter());
+        Logger errorLog = Logger.getLogger("errorLog");
+        errorLog.addHandler(fileHandler);
         
         UnderfloorProperties properties = new UnderfloorProperties();
-        
-        String hostName = InetAddress.getLocalHost().getHostName();
-        logger.info("Hello from " + hostName + " in " + TimeZone.getDefault().getDisplayName());
-        
-        final AtagOne one = initializeOne(properties);
-        
-        VBusLiveSystem vbus;
-        try {
-            System.out.println("Initializing VBus...");
-            vbus = new VBusLiveSystem(properties.vbusApiUrl);
-        } catch (IOException | NoSuchAlgorithmException | KeyManagementException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            return;
-        }
-        
+
         PumpAppliance pump;
         try {
+            String hostName = InetAddress.getLocalHost().getHostName();
+            System.out.println("Hello from " + hostName);
+            System.out.println("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
+            
             if (hostName.equals("raspberrypi")) {
                 pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes);
             } else {
                 pump = new PumpApplianceDummy(properties.relaisType, properties.overrunMinutes);
             }
         } catch (IOException | UnsupportedOperationException | InterruptedException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
+
+        AtagOne one;
+        try {
+            one = new AtagOne(properties.atagEmail, properties.atagPassword);
+        } catch (IOException ex) {
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
+        VBusLiveSystem vbus;
+        try {
+            vbus = new VBusLiveSystem(properties.vbusApiUrl);
+        } catch (IOException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException ex) {
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+
         
-        Thread AtagOneMonitor = new Thread(() -> {
+        Thread SystemMonitor = new Thread(() -> {
+            Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
+            AtagOneMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
+            
+            Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, errorLog, properties);
+            VBusSystemMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
+            
+            AtagOneMonitor.start();
+            VBusSystemMonitor.start();
+            
+            while (true) {    
+                System.out.println("SystemMonitor");
+                State AtagOneMonitorState = AtagOneMonitor.getState();
+                State VBusSystemMonitorState = VBusSystemMonitor.getState();
+                        
+                System.out.println("AtagOneMonitor: " + AtagOneMonitorState);
+                System.out.println("VBusSystemMonitor: " + VBusSystemMonitorState);
+                
+                if (!AtagOneMonitor.isAlive())
+                {
+                    errorLog.severe("AtagOneMonitor died. Restarting...");
+                    
+                    AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
+                    AtagOneMonitor.start();
+                }
+                
+                if (!VBusSystemMonitor.isAlive())
+                {
+                    errorLog.severe("VBusSystemMonitor died. Restarting...");
+
+                    VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, errorLog, properties);
+                    VBusSystemMonitor.start();
+                }
+                
+                UnderfloorManagement.Sleep(properties.systemMonitorInterval);
+            }
+        });
+        
+        SystemMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler()); 
+        SystemMonitor.start();
+    }
+
+    private static Thread CreateAtagOneMonitorThread(AtagOne one, PumpAppliance pump, UnderfloorProperties properties) {
+        return new Thread(() -> {
             while (true) {
                 
-                logger.info("Atag Thread");
+                System.out.println("Atag Thread");
                 
                 try {
-                    if (one.IsRunningLocal()) {
-                        pump.StartOrExtendPump();
+                    AtagOne.ValveMode mode = one.IsRunning();
+                    switch (mode) {
+                        case running:
+                            pump.StartOrExtendPump();
+                            break;
+                        case fireplace:
+                            pump.StopPump();
+                            break;
                     }
+                    
                 } catch (IOException ex) {
                     Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -68,65 +134,33 @@ public class UnderfloorManagement {
                 UnderfloorManagement.Sleep(properties.atagInterval);
             }
         });
+    }
 
-        Thread VBusSystemMonitor = new Thread(() -> {
+    private static Thread CreateVBusSystemMonitorThread(VBusLiveSystem vbus, PumpAppliance pump, Logger errorLog, UnderfloorProperties properties) {
+        return new Thread(() -> {
             while (true) {
                 
-                logger.info("VBus Thread");
+                System.out.println("VBus Thread");
                 
                 try {
-                    if (vbus.IsPumpBRunningFile()) {
+                    VBusLiveSystemData[] liveSystem = vbus.readLiveSystem();
+                    
+                    if (vbus.IsPumpBRunning(liveSystem)) {
                         pump.StartOrExtendPump();
                     }
-                } catch (IOException | InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
+                    
+                    //vbus.LogToAzureIoT(liveSystem);
+                    
+                } catch (IOException ex) {
+                    Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception e)
+                {
+                    Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, e);
                 }
                 
                 UnderfloorManagement.Sleep(properties.vbusInterval);
             }
         });
-
-/*
-        Thread aaCACommandListener = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                while (true) {
-
-                    logger.info("aaCA Command Listener Thread");
-                    
-                    FTPClient ftpClient = new FTPClient();
-                    try {
-                        ftpClient.connect(properties.aaCAFtpUrl);
-                        ftpClient.login(properties.aacaFtpUsername, properties.aacaFtpPassword);
-                        InputStream inputStream = ftpClient.retrieveFileStream(properties.aaCACommandFile);
-                        
-                        StringWriter writer = new StringWriter();
-                        IOUtils.copy(inputStream, writer, "UTF-8");
-                        String command = writer.toString();
-                        
-                        boolean success = ftpClient.completePendingCommand();
-                        if (success) {
-                            System.out.println("File #2 has been downloaded successfully.");
-                        }
-                        inputStream.close();
-                        
-                    } catch (IOException ex) {
-                        Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    
-                    
-                            
-                    
-
-                    UnderfloorManagement.Sleep(properties.aaCACommandInterval);
-                }
-            }
-        });
-*/
-        AtagOneMonitor.start();
-        VBusSystemMonitor.start();
-        //aaCACommandListener.start();
     }
 
     public static void Sleep(long milliseconds) {
@@ -135,19 +169,5 @@ public class UnderfloorManagement {
         } catch (InterruptedException ex) {
             Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    private static AtagOne initializeOne(UnderfloorProperties properties) {
-        while (true) {
-            try {
-                System.out.println("Initializing AtagOne...");
-                return new AtagOne(properties.atagEmail, properties.atagPassword);
-            } catch (IOException | NullPointerException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            } catch(Exception rest) {
-                logger.log(Level.SEVERE, null, rest);
-                return null;
-            }
-        }
-    }
+    }   
 }

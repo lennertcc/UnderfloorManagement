@@ -1,0 +1,22 @@
+<component name="libraryTable">
+  <library name="com.microsoft.azure.sdk.iot:iot-device-client:1.5.37" type="repository">
+    <properties maven-id="com.microsoft.azure.sdk.iot:iot-device-client:1.5.37" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/microsoft/azure/sdk/iot/iot-device-client/1.5.37/iot-device-client-1.5.37.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/qpid/proton-j/0.23.0/proton-j-0.23.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/microsoft/azure/sdk/iot/iot-deps/0.1.4/iot-deps-0.1.4.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/javax.json/1.0.4/javax.json-1.0.4.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/microsoft/azure/azure-storage/2.2.0/azure-storage-2.2.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.2.3/jackson-core-2.2.3.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.5/slf4j-api-1.7.5.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.3.2/commons-lang3-3.3.2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/paho/org.eclipse.paho.client.mqttv3/1.2.0/org.eclipse.paho.client.mqttv3-1.2.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.0/gson-2.8.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.10/commons-codec-1.10.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/log4j/log4j/1.2.17/log4j-1.2.17.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -22,7 +22,7 @@ public class PumpApplianceDummy extends PumpAppliance {
     
     @Override
     protected void InitPump() throws IOException, InterruptedException {
-        logger.info("Raspberry Pi Model dummy");
+        System.out.println("Raspberry Pi Model dummy");
     }
     
     @Override

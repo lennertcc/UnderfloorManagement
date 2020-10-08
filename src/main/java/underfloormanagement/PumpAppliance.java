@@ -18,17 +18,16 @@ import java.time.LocalDateTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 /**
  *
  * @author lenne
  */
 public class PumpAppliance implements Runnable {
 
-    protected static final Logger logger = Logger.getLogger(UnderfloorManagement.class.getName());
     LocalDateTime pumpRunningUntil = LocalDateTime.now();
     Thread pumpThread = null;
-    
-    
+
     public void StartOrExtendPump() {
         if (pumpThread != null && pumpThread.isAlive()) {
             this.extendThen();
@@ -38,43 +37,48 @@ public class PumpAppliance implements Runnable {
         }
     }
 
+    public void StopPump() {
+        this.pumpRunningUntil = LocalDateTime.now();
+    }
+    
     public void extendThen() {
         pumpRunningUntil = LocalDateTime.now().plus(Duration.ofMinutes(this.overrunMinutes));
-        logger.info("PumpAppliance running extended until: " + pumpRunningUntil.toString());
+        System.out.println("PumpAppliance running extended until: " + pumpRunningUntil.toString());
+        System.out.println();
     }
 
     @Override
     public void run() {
-        logger.info("PumpAppliance start running");
+        System.out.println("PumpAppliance start running");
 
         this.extendThen();
 
         try {
             this.Switch(PumpAppliance.ApplianceState.on);
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
             return;
         } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
             return;
         }
 
         while (pumpRunningUntil.isAfter(LocalDateTime.now())) {
-            UnderfloorManagement.Sleep(5000);
-            logger.info("PumpAppliance afterburn until " + pumpRunningUntil.toString());
+            UnderfloorManagement.Sleep(1000);
         }
 
-        logger.info("PumpAppliance stopping " + LocalDateTime.now().toString());
+        System.out.println("PumpAppliance stopping " + LocalDateTime.now().toString());
 
         try {
             this.Switch(PumpAppliance.ApplianceState.off);
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        logger.info("PumpAppliance stopped");
+        System.out.println("PumpAppliance stopped");
+        System.out.println();
     }
 
     enum ApplianceState {
@@ -116,8 +120,10 @@ public class PumpAppliance implements Runnable {
         
         gpio = GpioFactory.getInstance();
         pin4 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07);
-        logger.info("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
+
         
+        System.out.println("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
+
         System.out.println("Pump off");
         Switch(ApplianceState.off);
     }
@@ -138,7 +144,7 @@ public class PumpAppliance implements Runnable {
             gpio.setState(PinState.LOW, pin4);
         }
 
-        System.out.println("State of Pin 4: " + gpio.getState(pin4));
+        System.out.println("State of Pin 4:" + gpio.getState(pin4));
     }
 
 }

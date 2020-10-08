@@ -46,6 +46,8 @@
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>false</overWriteSnapshots>
               <overWriteIfNewer>true</overWriteIfNewer>
+
+
             </configuration>
           </execution>
         </executions>
@@ -62,7 +64,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>main.java.underfloormanagement.UnderfloorManagement</mainClass>
+              <mainClass>underfloormanagement.UnderfloorManagement</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -84,7 +86,7 @@
                      keyfile="${scp.keyfile}"
                      passphrase="${scp.passphrase}">
                   <fileset dir="${project.basedir}/target">
-                    <include name="UnderFloorManagement*.jar"/>
+                    <include name="UnderfloorManagement*.jar"/>
                     <include name="lib/*.*" />
                   </fileset>
                 </scp>
@@ -112,12 +114,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-antrun-plugin</artifactId>
-      <version>3.0.0</version>
-      <type>maven-plugin</type>
-    </dependency>
-    <dependency>
       <groupId>com.fasterxml.jackson</groupId>
       <artifactId>jackson-base</artifactId>
       <version>2.11.1</version>
@@ -139,13 +135,31 @@
       <version>2.6.0</version>
     </dependency>
     <dependency>
-      <groupId>org.juurlink</groupId>
-      <artifactId>atagone</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${basedir}/lib/atag-one.jar</systemPath>
+      <groupId>com.github.kozmoz</groupId>
+      <artifactId>atag-one-api</artifactId>
+      <version>v1.4.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.azure.sdk.iot</groupId>
+      <artifactId>iot-device-client</artifactId>
+      <version>1.5.37</version>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.azure.sdk.iot</groupId>
+      <artifactId>iot-service-client</artifactId>
+      <version>1.7.23</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
     </dependency>
   </dependencies>
 
-
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
 </project>

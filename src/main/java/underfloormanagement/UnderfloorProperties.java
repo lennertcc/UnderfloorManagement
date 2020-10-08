@@ -16,7 +16,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.impl.DefaultFileMonitor;
-
+import underfloormanagement.PumpAppliance.NoNc;
 
 /**
  *
@@ -24,19 +24,14 @@ import org.apache.commons.vfs2.impl.DefaultFileMonitor;
  */
 public class UnderfloorProperties implements FileListener {
 
-    public PumpAppliance.NoNc relaisType;
+    public NoNc relaisType;
     public String atagEmail;
     public String atagPassword;
     public String vbusApiUrl;
     public long vbusInterval;
     public long atagInterval;
-    public long aaCACommandInterval;
-    public String aaCACommandFile;
-    public String aaCAFtpUrl;
-    public String aacaFtpUsername;
-    public String aacaFtpPassword;
     public long overrunMinutes;
-    
+    public long systemMonitorInterval;
     
     private static String defaultFilename = "config.properties";
     private static String filename = "config.properties";
@@ -79,22 +74,16 @@ public class UnderfloorProperties implements FileListener {
         }
         
         properties.load(input);
-        this.relaisType = (properties.containsKey("RelaisType") ? PumpAppliance.NoNc.valueOf(properties.getProperty("RelaisType")) : this.relaisType);
+        this.relaisType = (properties.containsKey("RelaisType") ? NoNc.valueOf(properties.getProperty("RelaisType")) : this.relaisType);
         this.atagEmail = (properties.containsKey("AtagEmail") ? properties.getProperty("AtagEmail") : this.atagEmail);
         this.atagPassword = (properties.containsKey("AtagPassword") ? properties.getProperty("AtagPassword") : this.atagPassword);
         this.vbusApiUrl = (properties.containsKey("VBusApiUrl") ? properties.getProperty("VBusApiUrl") : this.vbusApiUrl);
         this.atagInterval = (properties.containsKey("AtagInterval") ? Long.parseLong(properties.getProperty("AtagInterval")) : this.atagInterval);
         this.vbusInterval = (properties.containsKey("VBusInterval") ? Long.parseLong(properties.getProperty("VBusInterval")) : this.vbusInterval);
-        this.aaCACommandInterval = (properties.containsKey("aaCACommandInterval") ? Long.parseLong(properties.getProperty("aaCACommandInterval")) : this.aaCACommandInterval);
-        this.aaCACommandFile = (properties.containsKey("aaCACommandFile") ? properties.getProperty("aaCACommandFile") : this.aaCACommandFile);
-        this.aaCAFtpUrl = (properties.containsKey("aaCAFtpUrl") ? properties.getProperty("aaCAFtpUrl") : this.aaCAFtpUrl);
-        this.aacaFtpUsername = (properties.containsKey("aacaFtpUsername") ? properties.getProperty("aacaFtpUsername") : this.aacaFtpUsername);
-        this.aacaFtpPassword = (properties.containsKey("aacaFtpPassword") ? properties.getProperty("aacaFtpPassword") : this.aacaFtpPassword);
-        
         this.overrunMinutes = (properties.containsKey("OverrunMinutes") ? Long.parseLong(properties.getProperty("OverrunMinutes")) : this.overrunMinutes);
+        this.systemMonitorInterval = (properties.containsKey("SystemMonitorInterval") ? Long.parseLong(properties.getProperty("SystemMonitorInterval")) : this.systemMonitorInterval);
     }
-    
-    @Deprecated
+
     private void SetFileSystemHook() throws FileSystemException {
         FileSystemManager fsManager = VFS.getManager();
         org.apache.commons.vfs2.FileObject listendir = fsManager.resolveFile(filename);

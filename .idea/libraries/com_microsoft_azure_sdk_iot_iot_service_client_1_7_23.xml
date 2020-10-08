@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="com.microsoft.azure.sdk.iot:iot-service-client:1.7.23" type="repository">
+    <properties maven-id="com.microsoft.azure.sdk.iot:iot-service-client:1.7.23" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/microsoft/azure/sdk/iot/iot-service-client/1.7.23/iot-service-client-1.7.23.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.5/gson-2.5.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/microsoft/azure/sdk/iot/iot-deps/0.0.1/iot-deps-0.0.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/javax.json/1.0.4/javax.json-1.0.4.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.6/commons-codec-1.6.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/qpid/proton-j/0.18.0/proton-j-0.18.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
