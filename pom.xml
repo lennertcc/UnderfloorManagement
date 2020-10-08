@@ -4,47 +4,119 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.example</groupId>
-  <artifactId>UnderFloorManagement</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <groupId>org.hispaniola</groupId>
+  <artifactId>UnderfloorManagement</artifactId>
+  <version>1.1-SNAPSHOT</version>
+
+
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+    <scp.host>192.168.1.8</scp.host>
+    <scp.remotedir>/home/pi/UnderFloorManagement</scp.remotedir>
+    <scp.userid>pi</scp.userid>
+    <scp.keyfile>${user.home}/.ssh/id_rsa</scp.keyfile>
+    <scp.passphrase>specify from commandline</scp.passphrase>
+
+  </properties>
+
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/java/underfloormanagement</directory>
+        <includes>
+          <include>config.properties</include>
+        </includes>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
+        <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <phase>package</phase>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <archive>
-                <manifest>
-                  <mainClass>
-                    underfloormanagement.UnderfloorManagement
-                  </mainClass>
-                </manifest>
-              </archive>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>false</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
             </configuration>
           </execution>
         </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
         <configuration>
-          <source>8</source>
-          <target>8</target>
+          <includes>
+            <include>**</include>
+          </includes>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>main.java.underfloormanagement.UnderfloorManagement</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>scp to pi</id>
+            <phase>install</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <scp todir="${scp.userid}@${scp.host}:${scp.remotedir}" verbose="true" trust="true" sftp="true" failonerror="true"
+                     keyfile="${scp.keyfile}"
+                     passphrase="${scp.passphrase}">
+                  <fileset dir="${project.basedir}/target">
+                    <include name="UnderFloorManagement*.jar"/>
+                    <include name="lib/*.*" />
+                  </fileset>
+                </scp>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.55</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant-jsch</artifactId>
+            <version>1.10.9</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
     </plugins>
   </build>
 
+
   <dependencies>
+    <dependency>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-antrun-plugin</artifactId>
+      <version>3.0.0</version>
+      <type>maven-plugin</type>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson</groupId>
       <artifactId>jackson-base</artifactId>
@@ -74,5 +146,6 @@
       <systemPath>${basedir}/lib/atag-one.jar</systemPath>
     </dependency>
   </dependencies>
+
 
 </project>

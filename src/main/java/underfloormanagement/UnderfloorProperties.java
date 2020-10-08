@@ -16,7 +16,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.impl.DefaultFileMonitor;
-import underfloormanagement.PumpAppliance.NoNc;
+
 
 /**
  *
@@ -24,7 +24,7 @@ import underfloormanagement.PumpAppliance.NoNc;
  */
 public class UnderfloorProperties implements FileListener {
 
-    public NoNc relaisType;
+    public PumpAppliance.NoNc relaisType;
     public String atagEmail;
     public String atagPassword;
     public String vbusApiUrl;
@@ -38,8 +38,8 @@ public class UnderfloorProperties implements FileListener {
     public long overrunMinutes;
     
     
-    private static String defaultFilename = "underfloormanagement/config.properties";
-    private static String filename = "dist/config.properties";
+    private static String defaultFilename = "config.properties";
+    private static String filename = "config.properties";
     
     
     public UnderfloorProperties() throws IOException {
@@ -79,7 +79,7 @@ public class UnderfloorProperties implements FileListener {
         }
         
         properties.load(input);
-        this.relaisType = (properties.containsKey("RelaisType") ? NoNc.valueOf(properties.getProperty("RelaisType")) : this.relaisType);
+        this.relaisType = (properties.containsKey("RelaisType") ? PumpAppliance.NoNc.valueOf(properties.getProperty("RelaisType")) : this.relaisType);
         this.atagEmail = (properties.containsKey("AtagEmail") ? properties.getProperty("AtagEmail") : this.atagEmail);
         this.atagPassword = (properties.containsKey("AtagPassword") ? properties.getProperty("AtagPassword") : this.atagPassword);
         this.vbusApiUrl = (properties.containsKey("VBusApiUrl") ? properties.getProperty("VBusApiUrl") : this.vbusApiUrl);
