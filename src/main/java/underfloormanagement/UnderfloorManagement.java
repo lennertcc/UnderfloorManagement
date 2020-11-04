@@ -5,22 +5,18 @@
  */
 package underfloormanagement;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.Thread.State;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.text.SimpleDateFormat;
+import java.util.logging.*;
 
-/**
- *
- * @author lenne
- */
 public class UnderfloorManagement {
     /**
      * @param args the command line arguments
@@ -28,18 +24,43 @@ public class UnderfloorManagement {
      */
     public static void main(String[] args) throws IOException {
 
-        Handler fileHandler = new FileHandler("errors.log");
-        fileHandler.setFormatter(new SimpleFormatter());
+        SimpleFormatter formatter = new SimpleFormatter() {
+            private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            @Override
+            public String format(LogRecord record) {
+                String thrown;
+                if (record.getThrown() == null) {
+                    thrown = "";
+                } else {
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    pw.println();
+                    record.getThrown().printStackTrace(pw);
+                    thrown = sw.toString();
+                }
+                return String.format("[%s] [%s]: %s%s%n", dateFormat.format(record.getMillis()),
+                        record.getLevel(), record.getMessage(), thrown);
+            }
+        };
+
+        Handler errorFileHandler = new FileHandler("UnderfloorErrors.log");
+        errorFileHandler.setFormatter(formatter);
         Logger errorLog = Logger.getLogger("errorLog");
-        errorLog.addHandler(fileHandler);
-        
+        errorLog.addHandler(errorFileHandler);
+
+        Handler infoFileHandler = new FileHandler("UnderfloorInfo.log");
+        infoFileHandler.setFormatter(formatter);
+        Logger infoLog = Logger.getLogger("infoLog");
+        infoLog.addHandler(infoFileHandler);
+
         UnderfloorProperties properties = new UnderfloorProperties();
 
         PumpAppliance pump;
         try {
             String hostName = InetAddress.getLocalHost().getHostName();
-            System.out.println("Hello from " + hostName);
-            System.out.println("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
+            logInfo("Hello from " + hostName);
+            logInfo("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
             
             if (hostName.equals("raspberrypi")) {
                 pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes);
@@ -47,7 +68,17 @@ public class UnderfloorManagement {
                 pump = new PumpApplianceDummy(properties.relaisType, properties.overrunMinutes);
             }
         } catch (IOException | UnsupportedOperationException | InterruptedException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            logError(null, ex);
+            return;
+        }
+
+        TemperatureSensors sensors;
+        try
+        {
+            sensors = new TemperatureSensors(properties.temp1, properties.temp2, properties.temp3);
+            sensors.ReadTemperatures();
+        } catch (InterruptedException ex) {
+            logError("Init ReadTemperatures failed", ex);
             return;
         }
 
@@ -55,7 +86,7 @@ public class UnderfloorManagement {
         try {
             one = new AtagOne(properties.atagEmail, properties.atagPassword);
         } catch (IOException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            logError(null, ex);
             return;
         }
 
@@ -63,32 +94,38 @@ public class UnderfloorManagement {
         try {
             vbus = new VBusLiveSystem(properties.vbusApiUrl);
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            logError(null, ex);
             return;
         }
 
-        
+
         Thread SystemMonitor = new Thread(() -> {
             Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
             AtagOneMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
             
             Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, errorLog, properties);
             VBusSystemMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
+
+            Thread TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties);
+            TemperatureSensorMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
             
             AtagOneMonitor.start();
             VBusSystemMonitor.start();
+            TemperatureSensorMonitor.start();
             
             while (true) {    
-                System.out.println("SystemMonitor");
+                logInfo("SystemMonitor");
                 State AtagOneMonitorState = AtagOneMonitor.getState();
                 State VBusSystemMonitorState = VBusSystemMonitor.getState();
-                        
-                System.out.println("AtagOneMonitor: " + AtagOneMonitorState);
-                System.out.println("VBusSystemMonitor: " + VBusSystemMonitorState);
+                State TemperatureSensorMonitorState = TemperatureSensorMonitor.getState();
+
+                logInfo("AtagOneMonitor: " + AtagOneMonitorState);
+                logInfo("VBusSystemMonitor: " + VBusSystemMonitorState);
+                logInfo("TemperatureSensorMonitor: " + TemperatureSensorMonitorState);
                 
                 if (!AtagOneMonitor.isAlive())
                 {
-                    errorLog.severe("AtagOneMonitor died. Restarting...");
+                    logError("AtagOneMonitor died. Restarting...", null);
                     
                     AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
                     AtagOneMonitor.start();
@@ -96,12 +133,20 @@ public class UnderfloorManagement {
                 
                 if (!VBusSystemMonitor.isAlive())
                 {
-                    errorLog.severe("VBusSystemMonitor died. Restarting...");
+                    logError("VBusSystemMonitor died. Restarting...", null);
 
                     VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, errorLog, properties);
                     VBusSystemMonitor.start();
                 }
-                
+
+                if (!TemperatureSensorMonitor.isAlive())
+                {
+                    logError("TemperatureSensorMonitor died. Restarting...", null);
+
+                    TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties);
+                    TemperatureSensorMonitor.start();
+                }
+
                 UnderfloorManagement.Sleep(properties.systemMonitorInterval);
             }
         });
@@ -114,7 +159,7 @@ public class UnderfloorManagement {
         return new Thread(() -> {
             while (true) {
                 
-                System.out.println("Atag Thread");
+                logInfo("Atag Thread");
                 
                 try {
                     AtagOne.ValveMode mode = one.IsRunning();
@@ -128,7 +173,7 @@ public class UnderfloorManagement {
                     }
                     
                 } catch (IOException ex) {
-                    Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+                    logError(null, ex);
                 }
                 
                 UnderfloorManagement.Sleep(properties.atagInterval);
@@ -140,7 +185,7 @@ public class UnderfloorManagement {
         return new Thread(() -> {
             while (true) {
                 
-                System.out.println("VBus Thread");
+                logInfo("VBus Thread");
                 
                 try {
                     VBusLiveSystemData[] liveSystem = vbus.readLiveSystem();
@@ -152,10 +197,10 @@ public class UnderfloorManagement {
                     //vbus.LogToAzureIoT(liveSystem);
                     
                 } catch (IOException ex) {
-                    Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+                    logError(null, ex);
                 } catch (Exception e)
                 {
-                    Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, e);
+                    logError(null, e);
                 }
                 
                 UnderfloorManagement.Sleep(properties.vbusInterval);
@@ -163,11 +208,43 @@ public class UnderfloorManagement {
         });
     }
 
+    private static Thread CreateTemperatureSensorsThread(TemperatureSensors sensors, PumpAppliance pump, UnderfloorProperties properties) {
+        return new Thread(() -> {
+            while (true) {
+
+                logInfo("Temperature Thread");
+
+                try {
+                    TemperatureSensors.TemperatureReading readings = sensors.ReadTemperatures();
+
+                } catch (InterruptedException ex) {
+                    logError("Crash in ReadTemperatures", ex);
+                }
+
+                UnderfloorManagement.Sleep(properties.tempInterval);
+            }
+        });
+    }
+
+
     public static void Sleep(long milliseconds) {
         try {
             Thread.sleep(milliseconds);
         } catch (InterruptedException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            logError(null, ex);
         }
-    }   
+    }
+
+    public static void logError(Object message, Throwable throwable) {
+        Logger.getLogger("errorLog").log(Level.SEVERE, message.toString(), throwable);
+        logInfo(message);
+    }
+
+    public static void logInfo(Object message) {
+        System.out.println(message);
+        Logger.getLogger("infoLog").log(Level.INFO, message.toString());
+    }
+
+
+
 }

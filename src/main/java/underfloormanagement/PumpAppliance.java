@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package underfloormanagement;
 
 import com.pi4j.io.gpio.GpioController;
@@ -15,14 +10,8 @@ import com.pi4j.wiringpi.Gpio;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
-/**
- *
- * @author lenne
- */
 public class PumpAppliance implements Runnable {
 
     LocalDateTime pumpRunningUntil = LocalDateTime.now();
@@ -43,23 +32,23 @@ public class PumpAppliance implements Runnable {
     
     public void extendThen() {
         pumpRunningUntil = LocalDateTime.now().plus(Duration.ofMinutes(this.overrunMinutes));
-        System.out.println("PumpAppliance running extended until: " + pumpRunningUntil.toString());
-        System.out.println();
+        UnderfloorManagement.logInfo("PumpAppliance running extended until: " + pumpRunningUntil.toString());
+        UnderfloorManagement.logInfo("");
     }
 
     @Override
     public void run() {
-        System.out.println("PumpAppliance start running");
+        UnderfloorManagement.logInfo("PumpAppliance start running");
 
         this.extendThen();
 
         try {
             this.Switch(PumpAppliance.ApplianceState.on);
         } catch (IOException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            UnderfloorManagement.logError(null, ex);
             return;
         } catch (InterruptedException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            UnderfloorManagement.logError(null, ex);
             return;
         }
 
@@ -67,18 +56,18 @@ public class PumpAppliance implements Runnable {
             UnderfloorManagement.Sleep(1000);
         }
 
-        System.out.println("PumpAppliance stopping " + LocalDateTime.now().toString());
+        UnderfloorManagement.logInfo("PumpAppliance stopping " + LocalDateTime.now().toString());
 
         try {
             this.Switch(PumpAppliance.ApplianceState.off);
         } catch (IOException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            UnderfloorManagement.logError(null, ex);
         } catch (InterruptedException ex) {
-            Logger.getLogger(UnderfloorManagement.class.getName()).log(Level.SEVERE, null, ex);
+            UnderfloorManagement.logError(null, ex);
         }
 
-        System.out.println("PumpAppliance stopped");
-        System.out.println();
+        UnderfloorManagement.logInfo("PumpAppliance stopped");
+        UnderfloorManagement.logInfo("");
     }
 
     enum ApplianceState {
@@ -93,7 +82,7 @@ public class PumpAppliance implements Runnable {
 
     protected final NoNc relaisType;
     private long overrunMinutes;
-    private GpioPinDigitalOutput pin4;
+    private GpioPinDigitalOutput pin;
     private GpioController gpio;
 
     /**
@@ -119,12 +108,11 @@ public class PumpAppliance implements Runnable {
         String boardRevision = String.valueOf(Gpio.piBoardRev());
         
         gpio = GpioFactory.getInstance();
-        pin4 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_07);
+        pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01); //https://pi4j.com/1.2/pins/model-b-plus.html
 
-        
-        System.out.println("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
 
-        System.out.println("Pump off");
+        UnderfloorManagement.logInfo("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
+        UnderfloorManagement.logInfo("Pump off");
         Switch(ApplianceState.off);
     }
 
@@ -139,12 +127,12 @@ public class PumpAppliance implements Runnable {
 
         if ((state == ApplianceState.on && relaisType == NoNc.no)
                 || (state == ApplianceState.off && relaisType == NoNc.nc)) {
-            gpio.setState(PinState.HIGH, pin4);
+            gpio.setState(PinState.HIGH, pin);
         } else {
-            gpio.setState(PinState.LOW, pin4);
+            gpio.setState(PinState.LOW, pin);
         }
 
-        System.out.println("State of Pin 4:" + gpio.getState(pin4));
+        UnderfloorManagement.logInfo("State of Pin:" + gpio.getState(pin));
     }
 
 }

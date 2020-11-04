@@ -8,7 +8,6 @@ import org.juurlink.atagone.domain.Configuration;
 
 public class AtagOne {
 
-    Configuration configuration;
     AtagOneConnectorInterface atagOneConnector;
     
     enum ValveMode {
@@ -20,18 +19,20 @@ public class AtagOne {
     
     public AtagOne(String email, String password) throws IOException {
         Configuration configuration = Configuration.builder().email(email).password(password).build();
+        UnderfloorManagement.logInfo("Logging in to AtagOne");
         atagOneConnector = new AtagOneConnectorFactory().getInstance(configuration);
         atagOneConnector.login(); // Login; Either local or remote.
+        UnderfloorManagement.logInfo("Login success");
     }
     
     public ValveMode IsRunning() throws IOException {
         
         Map<String, Object> diagnostics = atagOneConnector.getDiagnostics();
-        System.out.println(AtagOneConnectorInterface.VALUE_CURRENT_MODE + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_CURRENT_MODE));
-        System.out.println(AtagOneConnectorInterface.VALUE_LATEST_REPORT_TIME + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_LATEST_REPORT_TIME));
-        System.out.println(AtagOneConnectorInterface.VALUE_FLAME_STATUS + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_FLAME_STATUS));
-        System.out.println(AtagOneConnectorInterface.VALUE_BOILER_HEATING_FOR + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_BOILER_HEATING_FOR));
-        System.out.println();
+        UnderfloorManagement.logInfo(AtagOneConnectorInterface.VALUE_CURRENT_MODE + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_CURRENT_MODE));
+        UnderfloorManagement.logInfo(AtagOneConnectorInterface.VALUE_LATEST_REPORT_TIME + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_LATEST_REPORT_TIME));
+        UnderfloorManagement.logInfo(AtagOneConnectorInterface.VALUE_FLAME_STATUS + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_FLAME_STATUS));
+        UnderfloorManagement.logInfo(AtagOneConnectorInterface.VALUE_BOILER_HEATING_FOR + ": " + diagnostics.get(AtagOneConnectorInterface.VALUE_BOILER_HEATING_FOR));
+        UnderfloorManagement.logInfo("");
         
         if (diagnostics.get(AtagOneConnectorInterface.VALUE_CURRENT_MODE).equals("fireplace"))
         {

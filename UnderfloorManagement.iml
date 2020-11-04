@@ -10,6 +10,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" name="log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" name="com.microsoft.azure.sdk.iot:iot-device-client:1.5.37" level="project" />
+    <orderEntry type="library" name="com.microsoft.azure.sdk.iot:iot-service-client:1.7.23" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.11.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.11.1" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.11.1" level="project" />
@@ -20,17 +23,20 @@
     <orderEntry type="library" name="Maven: org.apache.hadoop:hadoop-hdfs-client:3.2.1" level="project" />
     <orderEntry type="library" name="Maven: com.squareup.okhttp:okhttp:2.7.5" level="project" />
     <orderEntry type="library" name="Maven: com.squareup.okio:okio:1.6.0" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: org.juurlink:atagone:1.0">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/atag-one.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="log4j:log4j:1.2.17" level="project" />
-    <orderEntry type="library" name="com.microsoft.azure.sdk.iot:iot-device-client:1.5.37" level="project" />
-    <orderEntry type="library" name="com.microsoft.azure.sdk.iot:iot-service-client:1.7.23" level="project" />
+    <orderEntry type="library" name="Maven: com.github.kozmoz:atag-one-api:v1.4.6" level="project" />
+    <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.microsoft.azure.sdk.iot:iot-device-client:1.5.37" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.qpid:proton-j:0.23.0" level="project" />
+    <orderEntry type="library" name="Maven: com.microsoft.azure.sdk.iot:iot-deps:0.1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.microsoft.azure:azure-storage:2.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk16:1.46" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.0" level="project" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.10" level="project" />
+    <orderEntry type="library" name="Maven: com.microsoft.azure.sdk.iot:iot-service-client:1.7.23" level="project" />
+    <orderEntry type="library" name="Maven: org.glassfish:javax.json:1.0.4" level="project" />
+    <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
   </component>
 </module>

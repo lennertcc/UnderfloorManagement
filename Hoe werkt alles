@@ -1,0 +1,74 @@
+Gegevens van de Pi
+192.168.1.8
+
+Een aantal commando's
+
+ps aux
+Het tonen van alle lopende processen
+
+cd /home/pi/UnderfloorManagement/
+Waar het hele project staat
+
+tail -f nohup.out
+Bekijk het staartje van de output
+
+Start.sh/stop.sh
+commando om de boel aan de sturen
+
+sudo crontab -e
+Om de scheduler te bewerken. 
+    - Elke minuut command.sh. (dit gebeurt niet meer, was een curl command die nu ingebouwd is als HttpsURLConnection)
+    - Elke dag de logging leeg gooien
+
+
+
+
+Build & Release
+
+Build gebeurt bij elke save, dat hoeft dus niet.
+
+Clean kun je doen, maar beter niet, dan wordt alles opgeruimd. De config file krijg je pas weer terug in /dist/ wanneer je debugging 
+start voor de Remote JRE op de Raspberry Pi, omdat alleen dan de ANT -post-jar goed wordt aangeroepen met de juiste ANT variables.
+
+Release doe je door een debug sessie te starten op de Pi. Dit kopieert alles in de juiste map.
+Daarna ga je met Putty nog eens naar die map en ./stop.sh en ./start.sh om de boel te laten draaien.
+Dan even tail -f nohup.out om te zien dat alles werkt. Zou leuk zijn om een versienummer van de jar te zien ofzo.
+
+
+Nieuwe omgeving
+
+Installeer Java SE Development Kit 8 (64 bit)
+Installeer Netbeans 8.2 (Latest Pre-Apache NetBeans version)
+Laad project
+Stel Remote JRE in:
+    Pi: 192.168.1.63
+    Remote JRE: /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre
+    Working dir: /home/pi/NetBeansProjects/
+    Exec prefix: sudo
+
+
+Azure IoT
+Device Id: UnderfloorManagerPi
+Device key: L8QMGz8sce1d6K6TEjUXpg==
+
+
+Java updaten op Raspberry
+- Blijf bij jdk versie 8 (1.8) of nieuwe Raspberry Pi OS waar een nieuwere Java op kan of upgraden naar 13 voor Pi
+- laatste versie is 8u211, updates worden nauwelijks verwacht
+    ejdk-8u211-linux-armv6-vfp-hflt.tar.gz
+
+Update raspbian (= hele nieuwe installatie) voor open-JDK-11
+- https://www.raspberrypi.org/downloads/raspbian/
+
+
+
+-----------------------
+tail -f /home/pi/UnderFloorManagement/UnderfloorInfo.log
+cd /home/pi/UnderFloorManagement/
+sudo nano /boot/config.txt
+cd /sys/bus/w1/devices
+ls /sys/bus/w1/devices
+sudo reboot
+sudo crontab -e
+sudo apt update && sudo apt upgrade -y
+

@@ -32,11 +32,15 @@ public class UnderfloorProperties implements FileListener {
     public long atagInterval;
     public long overrunMinutes;
     public long systemMonitorInterval;
-    
+    public long tempInterval;
+
+    public String temp1;
+    public String temp2;
+    public String temp3;
+
     private static String defaultFilename = "config.properties";
     private static String filename = "config.properties";
-    
-    
+
     public UnderfloorProperties() throws IOException {
         InitializeProperties();
     }
@@ -52,9 +56,8 @@ public class UnderfloorProperties implements FileListener {
             input = new FileInputStream(filename);
             LoadProperties(properties, input);            
             
-        }catch (IOException ex) {
-            ex.printStackTrace();
-            System.out.println("Looking in " + Paths.get(".").toAbsolutePath().normalize().toString());
+        } catch (IOException ex) {
+            UnderfloorManagement.logError("Looking in " + Paths.get(".").toAbsolutePath().normalize().toString(), ex);
             throw ex;
         } finally {
             if (defaultInput != null) {
@@ -69,7 +72,7 @@ public class UnderfloorProperties implements FileListener {
 
     private void LoadProperties(Properties properties, InputStream input) throws IOException {
         if (input == null) {
-            System.out.println("Sorry, unable to find config file");
+            UnderfloorManagement.logInfo("Sorry, unable to find config file");
             throw new FileSystemException("File not found");
         }
         
@@ -80,8 +83,12 @@ public class UnderfloorProperties implements FileListener {
         this.vbusApiUrl = (properties.containsKey("VBusApiUrl") ? properties.getProperty("VBusApiUrl") : this.vbusApiUrl);
         this.atagInterval = (properties.containsKey("AtagInterval") ? Long.parseLong(properties.getProperty("AtagInterval")) : this.atagInterval);
         this.vbusInterval = (properties.containsKey("VBusInterval") ? Long.parseLong(properties.getProperty("VBusInterval")) : this.vbusInterval);
+        this.tempInterval = (properties.containsKey("TempInterval") ? Long.parseLong(properties.getProperty("TempInterval")) : this.tempInterval);
         this.overrunMinutes = (properties.containsKey("OverrunMinutes") ? Long.parseLong(properties.getProperty("OverrunMinutes")) : this.overrunMinutes);
         this.systemMonitorInterval = (properties.containsKey("SystemMonitorInterval") ? Long.parseLong(properties.getProperty("SystemMonitorInterval")) : this.systemMonitorInterval);
+        this.temp1 = (properties.containsKey("Temp1") ? properties.getProperty("Temp1") : this.temp1);
+        this.temp2 = (properties.containsKey("Temp2") ? properties.getProperty("Temp2") : this.temp2);
+        this.temp3 = (properties.containsKey("Temp3") ? properties.getProperty("Temp3") : this.temp3);
     }
 
     private void SetFileSystemHook() throws FileSystemException {

@@ -22,7 +22,7 @@ public class PumpApplianceDummy extends PumpAppliance {
     
     @Override
     protected void InitPump() throws IOException, InterruptedException {
-        System.out.println("Raspberry Pi Model dummy");
+        UnderfloorManagement.logInfo("Raspberry Pi Model dummy");
     }
     
     @Override
@@ -34,7 +34,7 @@ public class PumpApplianceDummy extends PumpAppliance {
             dummyState = false;
         }
 
-        System.out.println("State of dummy: " + dummyState);
+        UnderfloorManagement.logInfo("State of dummy: " + dummyState);
 
     }
     

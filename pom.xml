@@ -8,7 +8,6 @@
   <artifactId>UnderfloorManagement</artifactId>
   <version>1.1-SNAPSHOT</version>
 
-
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
@@ -17,7 +16,6 @@
     <scp.userid>pi</scp.userid>
     <scp.keyfile>${user.home}/.ssh/id_rsa</scp.keyfile>
     <scp.passphrase>specify from commandline</scp.passphrase>
-
   </properties>
 
   <build>
@@ -46,8 +44,6 @@
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>false</overWriteSnapshots>
               <overWriteIfNewer>true</overWriteIfNewer>
-
-
             </configuration>
           </execution>
         </executions>
@@ -107,7 +103,6 @@
           </dependency>
         </dependencies>
       </plugin>
-
     </plugins>
   </build>
 
