@@ -15,7 +15,6 @@
     <scp.remotedir>/home/pi/UnderfloorManagement</scp.remotedir>
     <scp.userid>pi</scp.userid>
     <scp.keyfile>${user.home}/.ssh/id_rsa</scp.keyfile>
-    <scp.passphrase>specify from commandline</scp.passphrase>
   </properties>
 
   <build>
@@ -121,8 +120,8 @@
     </dependency>
     <dependency>
       <groupId>com.pi4j</groupId>
-      <artifactId>pi4j-gpio-extension</artifactId>
-      <version>1.2</version>
+      <artifactId>pi4j-core</artifactId>
+      <version>1.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
