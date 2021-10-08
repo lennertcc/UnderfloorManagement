@@ -6,13 +6,13 @@
 
   <groupId>org.hispaniola</groupId>
   <artifactId>UnderfloorManagement</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
 
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
     <scp.host>192.168.1.8</scp.host>
-    <scp.remotedir>/home/pi/UnderFloorManagement</scp.remotedir>
+    <scp.remotedir>/home/pi/UnderfloorManagement</scp.remotedir>
     <scp.userid>pi</scp.userid>
     <scp.keyfile>${user.home}/.ssh/id_rsa</scp.keyfile>
     <scp.passphrase>specify from commandline</scp.passphrase>
