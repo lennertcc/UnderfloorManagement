@@ -21,18 +21,27 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+        "id",
+        "filterValueId",
 	"header_identifier",
 	"field_identifier",
-	"name",
-	"unit",
-	"unit_code",
-	"unitFamily",
 	"rootTypeId",
-	"value",
-	"raw_value"
-})
+        "name",
+        "filteredId",
+        "precision",
+        "function",
+        "unit_code",
+        "unitFamily",
+        "unit",
+        "value",
+        "raw_value"})
+
 public class VBusLiveSystemData {
 
+	@JsonProperty("id")
+	private String id;
+        @JsonProperty("filterValueId")
+	private String filterValueId;
 	@JsonProperty("header_identifier")
 	private String headerIdentifier;
 	@JsonProperty("field_identifier")
@@ -54,6 +63,25 @@ public class VBusLiveSystemData {
 	@JsonIgnore
 	private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+	@JsonProperty("id")
+	public String getId() {
+		return id;
+	}
+        
+        @JsonProperty("id")
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	@JsonProperty("filterValueId")
+	public String getfilterValueId() {
+		return filterValueId;
+	}
+        @JsonProperty("filterValueId")
+	public void setfilterValueId(String filterValueId) {
+		this.filterValueId =  filterValueId;
+	}
+        
 	@JsonProperty("header_identifier")
 	public String getHeaderIdentifier() {
 		return headerIdentifier;
