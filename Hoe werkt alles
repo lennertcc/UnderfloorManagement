@@ -21,50 +21,22 @@ Om de scheduler te bewerken.
     - Elke dag de logging leeg gooien
 
 
+Nieuwe omgeving inrichten:
+- Intellij 2021 + Embedded Linux JMV Debugger plugin
+- .ssh/id_rsa voor installatie van jar op pi via pom
+- zulu11.41.75-ca-jdk11.0.8-linux_aarch32hf
+- Pi4j 1.4
 
 
-Build & Release
-
-Build gebeurt bij elke save, dat hoeft dus niet.
-
-Clean kun je doen, maar beter niet, dan wordt alles opgeruimd. De config file krijg je pas weer terug in /dist/ wanneer je debugging 
-start voor de Remote JRE op de Raspberry Pi, omdat alleen dan de ANT -post-jar goed wordt aangeroepen met de juiste ANT variables.
-
-Release doe je door een debug sessie te starten op de Pi. Dit kopieert alles in de juiste map.
-Daarna ga je met Putty nog eens naar die map en ./stop.sh en ./start.sh om de boel te laten draaien.
-Dan even tail -f nohup.out om te zien dat alles werkt. Zou leuk zijn om een versienummer van de jar te zien ofzo.
 
 
-Nieuwe omgeving
 
-Installeer Java SE Development Kit 8 (64 bit)
-Installeer Netbeans 8.2 (Latest Pre-Apache NetBeans version)
-Laad project
-Stel Remote JRE in:
-    Pi: 192.168.1.63
-    Remote JRE: /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre
-    Working dir: /home/pi/NetBeansProjects/
-    Exec prefix: sudo
-
-
-Azure IoT
-Device Id: UnderfloorManagerPi
-Device key: L8QMGz8sce1d6K6TEjUXpg==
-
-
-Java updaten op Raspberry
-- Blijf bij jdk versie 8 (1.8) of nieuwe Raspberry Pi OS waar een nieuwere Java op kan of upgraden naar 13 voor Pi
-- laatste versie is 8u211, updates worden nauwelijks verwacht
-    ejdk-8u211-linux-armv6-vfp-hflt.tar.gz
-
-Update raspbian (= hele nieuwe installatie) voor open-JDK-11
-- https://www.raspberrypi.org/downloads/raspbian/
 
 
 
 -----------------------
 tail -f /home/pi/UnderFloorManagement/UnderfloorInfo.log
-cd /home/pi/UnderFloorManagement/
+cd /home/pi/UnderfloorManagement/
 sudo nano /boot/config.txt
 cd /sys/bus/w1/devices
 ls /sys/bus/w1/devices
