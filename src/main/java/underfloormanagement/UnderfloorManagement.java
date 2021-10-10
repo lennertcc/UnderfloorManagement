@@ -54,14 +54,15 @@ public class UnderfloorManagement {
         Logger infoLog = Logger.getLogger("infoLog");
         infoLog.addHandler(infoFileHandler);
 
+        String hostName = InetAddress.getLocalHost().getHostName();
+        logInfo("Hello from " + hostName);
+        logInfo("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
+
         UnderfloorProperties properties = new UnderfloorProperties();
 
         PumpAppliance pump;
         try {
-            String hostName = InetAddress.getLocalHost().getHostName();
-            logInfo("Hello from " + hostName);
-            logInfo("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
-            
+
             if (hostName.equals("raspberrypi")) {
                 pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes);
             } else {
@@ -75,8 +76,15 @@ public class UnderfloorManagement {
         TemperatureSensors sensors;
         try
         {
-            sensors = new TemperatureSensors(properties.temp1, properties.temp2, properties.temp3);
-            sensors.ReadTemperatures();
+            if (hostName.equals("raspberrypi")) {
+                sensors = new TemperatureSensors(properties.temp1, properties.temp2, properties.temp3);
+                sensors.ReadTemperatures();
+            }
+            else
+            {
+                sensors = new TemperatureSensorsDummy();
+                sensors.ReadTemperatures();
+            }
         } catch (InterruptedException ex) {
             logError("Init ReadTemperatures failed", ex);
             return;

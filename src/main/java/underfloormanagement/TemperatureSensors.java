@@ -15,6 +15,11 @@ public class TemperatureSensors {
     private GpioPinDigitalOutput pin;
     private GpioController gpio;
 
+    
+    protected TemperatureSensors(){
+    }
+    
+
     public TemperatureSensors(String temp1FilePath, String temp2FilePath, String temp3FilePath) {
         this.temp1FilePath = temp1FilePath;
         this.temp2FilePath = temp2FilePath;
