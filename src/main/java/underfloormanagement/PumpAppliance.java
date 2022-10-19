@@ -10,9 +10,12 @@ import com.pi4j.wiringpi.Gpio;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class PumpAppliance implements Runnable {
+
+    private static final Logger logger = LogManager.getLogger(PumpAppliance.class);
 
     LocalDateTime pumpRunningUntil = LocalDateTime.now();
     Thread pumpThread = null;
@@ -29,26 +32,26 @@ public class PumpAppliance implements Runnable {
     public void StopPump() {
         this.pumpRunningUntil = LocalDateTime.now();
     }
-    
+
     public void extendThen() {
         pumpRunningUntil = LocalDateTime.now().plus(Duration.ofMinutes(this.overrunMinutes));
-        UnderfloorManagement.logInfo("PumpAppliance running extended until: " + pumpRunningUntil.toString());
-        UnderfloorManagement.logInfo("");
+        logger.info("PumpAppliance running extended until: " + pumpRunningUntil.toString());
+        logger.info("");
     }
 
     @Override
     public void run() {
-        UnderfloorManagement.logInfo("PumpAppliance start running");
+        logger.info("PumpAppliance start running");
 
         this.extendThen();
 
         try {
             this.Switch(PumpAppliance.ApplianceState.on);
         } catch (IOException ex) {
-            UnderfloorManagement.logError(null, ex);
+            logger.error(ex);
             return;
         } catch (InterruptedException ex) {
-            UnderfloorManagement.logError(null, ex);
+            logger.error(ex);
             return;
         }
 
@@ -56,18 +59,18 @@ public class PumpAppliance implements Runnable {
             UnderfloorManagement.Sleep(1000);
         }
 
-        UnderfloorManagement.logInfo("PumpAppliance stopping " + LocalDateTime.now().toString());
+        logger.info("PumpAppliance stopping " + LocalDateTime.now().toString());
 
         try {
             this.Switch(PumpAppliance.ApplianceState.off);
         } catch (IOException ex) {
-            UnderfloorManagement.logError(null, ex);
+            logger.error(ex);
         } catch (InterruptedException ex) {
-            UnderfloorManagement.logError(null, ex);
+            logger.error(ex);
         }
 
-        UnderfloorManagement.logInfo("PumpAppliance stopped");
-        UnderfloorManagement.logInfo("");
+        logger.info("PumpAppliance stopped");
+        logger.info("");
     }
 
     enum ApplianceState {
@@ -94,7 +97,8 @@ public class PumpAppliance implements Runnable {
      * @throws InterruptedException
      * @throws UnsupportedOperationException
      */
-    public PumpAppliance(NoNc relaisType, long overrunMinutes) throws IOException, InterruptedException, UnsupportedOperationException {
+    public PumpAppliance(NoNc relaisType, long overrunMinutes)
+            throws IOException, InterruptedException, UnsupportedOperationException {
         this.relaisType = relaisType;
         this.overrunMinutes = overrunMinutes;
         InitPump();
@@ -106,13 +110,12 @@ public class PumpAppliance implements Runnable {
 
         String boardName = piBoardType.name();
         String boardRevision = String.valueOf(Gpio.piBoardRev());
-        
+
         gpio = GpioFactory.getInstance();
-        pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01); //https://pi4j.com/1.2/pins/model-b-plus.html
+        pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01); // https://pi4j.com/1.2/pins/model-b-plus.html
 
-
-        UnderfloorManagement.logInfo("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
-        UnderfloorManagement.logInfo("Pump off");
+        logger.info("Raspberry Pi Model " + boardName + " Revision " + boardRevision);
+        logger.info("Pump off");
         Switch(ApplianceState.off);
     }
 
@@ -132,7 +135,7 @@ public class PumpAppliance implements Runnable {
             gpio.setState(PinState.LOW, pin);
         }
 
-        UnderfloorManagement.logInfo("State of Pin:" + gpio.getState(pin));
+        logger.info("State of Pin:" + gpio.getState(pin));
     }
 
 }

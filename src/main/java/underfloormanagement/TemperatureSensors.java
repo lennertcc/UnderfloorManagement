@@ -4,7 +4,8 @@ import com.pi4j.io.gpio.*;
 
 import java.io.*;
 import java.nio.file.*;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 public class TemperatureSensors {
 
     String[] sensorFilePath;
@@ -14,6 +15,8 @@ public class TemperatureSensors {
 
     private GpioPinDigitalOutput pin;
     private GpioController gpio;
+
+    private static final Logger logger = LogManager.getLogger(TemperatureSensors.class);
 
     
     protected TemperatureSensors(){
@@ -43,7 +46,7 @@ public class TemperatureSensors {
         }
         catch (IOException e)
         {
-            UnderfloorManagement.logError("Cannot read temperature sensor 1", e);
+            logger.error("Cannot read temperature sensor 1", e);
             reading.aanvoerTemp = Long.MIN_VALUE;
             resetSensors = true;
         }
@@ -56,7 +59,7 @@ public class TemperatureSensors {
         }
         catch (IOException e)
         {
-            UnderfloorManagement.logError("Cannot read temperature sensor 2", e);
+            logger.error("Cannot read temperature sensor 2", e);
             reading.retourTemp = Long.MIN_VALUE;
             resetSensors = true;
         }
@@ -70,15 +73,15 @@ public class TemperatureSensors {
         }
         catch (IOException e)
         {
-            UnderfloorManagement.logError("Cannot read temperature sensor 3", e);
+            logger.error("Cannot read temperature sensor 3", e);
             reading.kastTemp = Long.MIN_VALUE;
             resetSensors = true;
         }
 
-        UnderfloorManagement.logInfo(reading);
+        logger.info(reading);
         if (resetSensors)
         {
-            UnderfloorManagement.logError("Temperature sensor lost. Resetting...", null);
+            logger.error("Temperature sensor lost. Resetting...");
 
             gpio.setState(PinState.LOW, pin);
             UnderfloorManagement.Sleep(2000);
@@ -87,11 +90,11 @@ public class TemperatureSensors {
 
             TemperatureReading testReading = ReadTemperatures();
             if (testReading.kastTemp > Long.MIN_VALUE) {
-                UnderfloorManagement.logError("Temperature sensor lost. Reset success", null);
+                logger.error("Temperature sensor lost. Reset success");
             }
             else
             {
-                UnderfloorManagement.logError("Temperature sensor lost. Reset failed", null);
+                logger.error("Temperature sensor lost. Reset failed");
             }
         }
 
@@ -101,7 +104,7 @@ public class TemperatureSensors {
     private String ReadFileLine(Path path) throws IOException, InterruptedException {
         String s;
         String command =  String.format("cat %s", path.toString());
-        UnderfloorManagement.logInfo(command);
+        logger.info(command);
         Process p = Runtime.getRuntime().exec(command);
         p.waitFor();
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));

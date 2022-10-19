@@ -1,7 +1,10 @@
 Gegevens van de Pi
 192.168.1.8
+user: pi
+pw: standaard
 
-Een aantal commando's
+
+Een aantal commandos
 
 ps aux
 Het tonen van alle lopende processen
@@ -9,7 +12,7 @@ Het tonen van alle lopende processen
 cd /home/pi/UnderfloorManagement/
 Waar het hele project staat
 
-tail -f nohup.out
+tail -f all.log
 Bekijk het staartje van de output
 
 Start.sh/stop.sh
@@ -22,7 +25,7 @@ Om de scheduler te bewerken.
 
 
 Nieuwe omgeving inrichten:
-- Intellij 2021 + Embedded Linux JMV Debugger plugin
+- VSCode + java plugins
 - .ssh/id_rsa voor installatie van jar op pi via pom
 - zulu11.41.75-ca-jdk11.0.8-linux_aarch32hf
 - Pi4j 1.4

@@ -6,36 +6,38 @@
 package underfloormanagement;
 
 import java.io.IOException;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  *
  * @author lenne
  */
 public class PumpApplianceDummy extends PumpAppliance {
-    
+
     private boolean dummyState;
-    
-    public PumpApplianceDummy(NoNc relaisType, long overrunMinutes) throws IOException, InterruptedException
-    {
-          super(relaisType, overrunMinutes);
+    private static final Logger logger = LogManager.getLogger(PumpApplianceDummy.class);
+
+    public PumpApplianceDummy(NoNc relaisType, long overrunMinutes) throws IOException, InterruptedException {
+        super(relaisType, overrunMinutes);
     }
-    
+
     @Override
     protected void InitPump() throws IOException, InterruptedException {
-        UnderfloorManagement.logInfo("Raspberry Pi Model dummy");
+        logger.info("Raspberry Pi Model dummy");
     }
-    
+
     @Override
     public void Switch(ApplianceState state) throws IOException, InterruptedException {
-                if ((state == ApplianceState.on && relaisType == NoNc.nc)
+        if ((state == ApplianceState.on && relaisType == NoNc.nc)
                 || (state == ApplianceState.off && relaisType == NoNc.no)) {
             dummyState = true;
         } else {
             dummyState = false;
         }
 
-        UnderfloorManagement.logInfo("State of dummy: " + dummyState);
+        logger.info("State of dummy: " + dummyState);
 
     }
-    
+
 }
