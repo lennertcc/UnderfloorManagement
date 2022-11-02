@@ -87,6 +87,8 @@ public class VBusLiveSystem {
         connection.setRequestMethod("GET");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         connection.setRequestProperty("Accept", "application/json");
+        connection.setConnectTimeout(5000);
+
         // connection.setDoOutput(true);
         // connection.setDoInput(true);
 
@@ -95,12 +97,18 @@ public class VBusLiveSystem {
         // wr.close();
 
         int httpResult = connection.getResponseCode();
+        logger.info(String.format("VBus readLiveSystem response code %d", httpResult));
         if (httpResult == HttpURLConnection.HTTP_OK) {
+
             InputStream content = (InputStream) connection.getInputStream();
-            ObjectMapper mapper = new ObjectMapper();
+            String stringContent = new String(content.readAllBytes(), StandardCharsets.UTF_8);
+            content.close();
+
+            logger.info(String.format("String content length: %d", stringContent.length()));
 
             // JSON from file to Object
-            VBusLiveSystemData[] liveSystem = mapper.readValue(content, VBusLiveSystemData[].class);
+            ObjectMapper mapper = new ObjectMapper();
+            VBusLiveSystemData[] liveSystem = mapper.readValue(stringContent, VBusLiveSystemData[].class);
 
             return liveSystem;
         } else {
