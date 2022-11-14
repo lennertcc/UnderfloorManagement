@@ -6,12 +6,9 @@
 package underfloormanagement;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.DataOutputStream;
+import underfloormanagement.data.VBusLiveSystemReading;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -35,16 +32,13 @@ public class VBusLiveSystem {
     private final URL apiUrl;
     private static final Logger logger = LogManager.getLogger(VBusLiveSystem.class);
 
-    // private AzureIoTDevice iotDevice = null;
-
     public VBusLiveSystem(String apiUrl) throws IOException, MalformedURLException, NoSuchAlgorithmException,
             KeyManagementException, URISyntaxException {
-        // iotDevice = new AzureIoTDevice("VBusLiveSystem");
         InitializeSSL();
         this.apiUrl = new URL(apiUrl);
     }
 
-    public VBusLiveSystemData[] readLiveSystem() throws Exception, IOException {
+    public VBusLiveSystemReading[] readLiveSystem() throws Exception, IOException {
         logger.info("VBus readLiveSystem");
 
         // String body =
@@ -89,13 +83,6 @@ public class VBusLiveSystem {
         connection.setRequestProperty("Accept", "application/json");
         connection.setConnectTimeout(5000);
 
-        // connection.setDoOutput(true);
-        // connection.setDoInput(true);
-
-        // DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
-        // wr.write( postData );
-        // wr.close();
-
         int httpResult = connection.getResponseCode();
         logger.info(String.format("VBus readLiveSystem response code %d", httpResult));
         if (httpResult == HttpURLConnection.HTTP_OK) {
@@ -108,7 +95,7 @@ public class VBusLiveSystem {
 
             // JSON from file to Object
             ObjectMapper mapper = new ObjectMapper();
-            VBusLiveSystemData[] liveSystem = mapper.readValue(stringContent, VBusLiveSystemData[].class);
+            VBusLiveSystemReading[] liveSystem = mapper.readValue(stringContent, VBusLiveSystemReading[].class);
 
             return liveSystem;
         } else {
@@ -118,43 +105,25 @@ public class VBusLiveSystem {
             throw new Exception(errorMessage);
         }
     }
-    /*
-     * public void LogToAzureIoT(VBusLiveSystemData[] liveSystem) throws IOException
-     * {
-     * UnderfloorManagement.logInfo("VBus log to Azure IoT");
-     * 
-     * Optional<VBusLiveSystemData> PWMB = Arrays.stream(liveSystem).filter(x ->
-     * x.getFieldIdentifier().equals("039_1_0")).findAny();
-     * 
-     * if (PWMB.isPresent()) {
-     * ObjectMapper mapper = new ObjectMapper();
-     * try {
-     * iotDevice.logSomething(mapper.writeValueAsString(PWMB.get()));
-     * } catch (UnsupportedEncodingException ex) {
-     * UnderfloorManagement.logError(null, ex);
-     * }
-     * }
-     * }
-     */
 
-    public boolean IsPumpBRunning(VBusLiveSystemData[] liveSystem) throws IOException {
+    public String PercentagePumpBRunning(VBusLiveSystemReading[] liveSystem) throws IOException {
         logger.info("VBus pump status");
 
-        Optional<VBusLiveSystemData> PWMB = Arrays.stream(liveSystem).filter(x -> x.getName().equals("PWM B"))
+        Optional<VBusLiveSystemReading> PWMB = Arrays.stream(liveSystem).filter(x -> x.getName().equals("PWM B"))
                 .findAny();
-        Optional<VBusLiveSystemData> SystemTime = Arrays.stream(liveSystem)
+        Optional<VBusLiveSystemReading> SystemTime = Arrays.stream(liveSystem)
                 .filter(x -> x.getName().equals("System date")).findAny();
 
         if (PWMB.isPresent()) {
             logger.info("SystemTime: " + SystemTime.get().getValue());
             logger.info("PWM B: " + PWMB.get().getValue());
             logger.info("");
-            return !PWMB.get().getValue().equals("0");
+            return PWMB.get().getValue();
         } else {
             logger.info("PWM B not present in diagnostics");
             logger.info("");
         }
-        return false;
+        return "0";
     }
 
     public static void InitializeSSL() throws IOException, NoSuchAlgorithmException, KeyManagementException {

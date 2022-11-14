@@ -18,8 +18,9 @@ public class PumpApplianceDummy extends PumpAppliance {
     private boolean dummyState;
     private static final Logger logger = LogManager.getLogger(PumpApplianceDummy.class);
 
-    public PumpApplianceDummy(NoNc relaisType, long overrunMinutes) throws IOException, InterruptedException {
-        super(relaisType, overrunMinutes);
+    public PumpApplianceDummy(NoNc relaisType, long overrunMinutes, CsvReporter reporter)
+            throws IOException, InterruptedException {
+        super(relaisType, overrunMinutes, reporter);
     }
 
     @Override

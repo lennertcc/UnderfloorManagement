@@ -6,15 +6,16 @@
 package underfloormanagement;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.Thread.State;
 import java.net.InetAddress;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import org.apache.logging.log4j.Logger;
+
+import underfloormanagement.data.TemperatureReading;
+import underfloormanagement.data.VBusLiveSystemReading;
+
 import org.apache.logging.log4j.LogManager;
 
 public class UnderfloorManagement {
@@ -33,14 +34,15 @@ public class UnderfloorManagement {
                 + " from " + System.getProperty("java.vendor"));
 
         UnderfloorProperties properties = new UnderfloorProperties();
+        CsvReporter csvReporter = new CsvReporter();
 
         PumpAppliance pump;
         try {
 
             if (hostName.equals("raspberrypi")) {
-                pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes);
+                pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes, csvReporter);
             } else {
-                pump = new PumpApplianceDummy(properties.relaisType, properties.overrunMinutes);
+                pump = new PumpApplianceDummy(properties.relaisType, properties.overrunMinutes, csvReporter);
             }
         } catch (IOException | UnsupportedOperationException | InterruptedException ex) {
             logger.error(ex);
@@ -78,13 +80,13 @@ public class UnderfloorManagement {
         }
 
         Thread SystemMonitor = new Thread(() -> {
-            Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
+            Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties, csvReporter);
             AtagOneMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
-            Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties);
+            Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties, csvReporter);
             VBusSystemMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
-            Thread TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties);
+            Thread TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties, csvReporter);
             TemperatureSensorMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
             AtagOneMonitor.start();
@@ -104,21 +106,21 @@ public class UnderfloorManagement {
                 if (!AtagOneMonitor.isAlive()) {
                     logger.error("AtagOneMonitor died. Restarting...");
 
-                    AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties);
+                    AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties, csvReporter);
                     AtagOneMonitor.start();
                 }
 
                 if (!VBusSystemMonitor.isAlive()) {
                     logger.error("VBusSystemMonitor died. Restarting...");
 
-                    VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties);
+                    VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties, csvReporter);
                     VBusSystemMonitor.start();
                 }
 
                 if (!TemperatureSensorMonitor.isAlive()) {
                     logger.error("TemperatureSensorMonitor died. Restarting...");
 
-                    TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties);
+                    TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties, csvReporter);
                     TemperatureSensorMonitor.start();
                 }
 
@@ -130,7 +132,8 @@ public class UnderfloorManagement {
         SystemMonitor.start();
     }
 
-    private static Thread CreateAtagOneMonitorThread(AtagOne one, PumpAppliance pump, UnderfloorProperties properties) {
+    private static Thread CreateAtagOneMonitorThread(AtagOne one, PumpAppliance pump, UnderfloorProperties properties,
+            CsvReporter csvReporter) {
         return new Thread(() -> {
             while (true) {
 
@@ -138,12 +141,15 @@ public class UnderfloorManagement {
 
                 try {
                     AtagOne.ValveMode mode = one.IsRunning();
+                    csvReporter.reportAtagValveMode(mode);
                     switch (mode) {
                         case running:
                             pump.StartOrExtendPump();
                             break;
                         case fireplace:
                             pump.StopPump();
+                            break;
+                        case off:
                             break;
                     }
 
@@ -157,20 +163,19 @@ public class UnderfloorManagement {
     }
 
     private static Thread CreateVBusSystemMonitorThread(VBusLiveSystem vbus, PumpAppliance pump,
-            UnderfloorProperties properties) {
+            UnderfloorProperties properties, CsvReporter csvReporter) {
         return new Thread(() -> {
             while (true) {
 
                 logger.info("VBus Thread");
 
                 try {
-                    VBusLiveSystemData[] liveSystem = vbus.readLiveSystem();
-
-                    if (vbus.IsPumpBRunning(liveSystem)) {
+                    VBusLiveSystemReading[] liveSystem = vbus.readLiveSystem();
+                    String percentage = vbus.PercentagePumpBRunning(liveSystem);
+                    csvReporter.reportPercentagePwmB(percentage);
+                    if (!percentage.equals("0")) {
                         pump.StartOrExtendPump();
                     }
-
-                    // vbus.LogToAzureIoT(liveSystem);
 
                 } catch (IOException ex) {
                     logger.error(ex);
@@ -184,15 +189,21 @@ public class UnderfloorManagement {
     }
 
     private static Thread CreateTemperatureSensorsThread(TemperatureSensors sensors, PumpAppliance pump,
-            UnderfloorProperties properties) {
+            UnderfloorProperties properties, CsvReporter csvReporter) {
         return new Thread(() -> {
             while (true) {
 
                 logger.info("Temperature Thread");
 
                 try {
-                    TemperatureSensors.TemperatureReading readings = sensors.ReadTemperatures();
+                    TemperatureReading readings = sensors.ReadTemperatures();
+                    if (readings != null) {
+                        csvReporter.reportTemperatureReading(readings);
 
+                        if (readings.getAanvoerTemp() > properties.tempThreshold) {
+                            pump.StartOrExtendPump();
+                        }
+                    }
                 } catch (InterruptedException ex) {
                     logger.error("Crash in ReadTemperatures", ex);
                 }

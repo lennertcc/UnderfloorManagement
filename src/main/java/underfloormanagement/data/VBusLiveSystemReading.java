@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package underfloormanagement;
+package underfloormanagement.data;
 
 /**
  *
@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "value",
         "raw_value"})
 
-public class VBusLiveSystemData {
+public class VBusLiveSystemReading {
 
 	@JsonProperty("id")
 	private String id;

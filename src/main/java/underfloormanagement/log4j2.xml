@@ -5,13 +5,25 @@
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
 
-    <File name="all_logs_file" fileName="all.log">
+    <RollingFile name="all_logs_file" fileName="logs/all.log" filePattern="logs/all-%d{MM-dd-yyyy}-%i.log">
+      <Policies>
+        <TimeBasedTriggeringPolicy />
+      </Policies>
       <PatternLayout>
         <pattern>%d %p %c{1.} [%t] %m%n</pattern>
       </PatternLayout>
-    </File>
+    </RollingFile>
+    <RollingFile name="temperature_logger_file" fileName="logs/temperature.csv" filePattern="logs/temperature-%d{MM-dd-yyyy}-%i.csv">
+      <Policies>
+        <OnStartupTriggeringPolicy />
+        <TimeBasedTriggeringPolicy />
+      </Policies>
+      <PatternLayout>
+        <pattern>%d{ISO8601};%m%n</pattern>
+      </PatternLayout>
+    </RollingFile>
 
-    <File name="important_logs_file" fileName="important.log">
+    <File name="important_logs_file" fileName="logs/important.log">
       <Filters>
         <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>
       </Filters>
@@ -21,6 +33,9 @@
     </File>
   </Appenders>
   <Loggers>
+    <Logger name="temperature_logger" level="trace" additivity="false">
+      <AppenderRef ref="temperature_logger_file"/>
+    </Logger>
     <Root level="info">
       <AppenderRef ref="console"/>
       <AppenderRef ref="all_logs_file"/>

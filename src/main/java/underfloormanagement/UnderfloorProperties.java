@@ -38,6 +38,7 @@ public class UnderfloorProperties implements FileListener {
     public String temp1;
     public String temp2;
     public String temp3;
+    public long tempThreshold;
 
     private static String defaultFilename = "config.properties";
     private static String filename = "config.properties";
@@ -103,6 +104,9 @@ public class UnderfloorProperties implements FileListener {
         this.temp1 = (properties.containsKey("Temp1") ? properties.getProperty("Temp1") : this.temp1);
         this.temp2 = (properties.containsKey("Temp2") ? properties.getProperty("Temp2") : this.temp2);
         this.temp3 = (properties.containsKey("Temp3") ? properties.getProperty("Temp3") : this.temp3);
+        this.tempThreshold = (properties.containsKey("TempThreshold")
+                ? Long.parseLong(properties.getProperty("TempThreshold"))
+                : this.tempThreshold);
     }
 
     @Override
