@@ -33,26 +33,27 @@ public class UnderfloorManagement {
         logger.info("Running " + System.getProperty("java.vm.name") + " version " + System.getProperty("java.version")
                 + " from " + System.getProperty("java.vendor"));
 
-        UnderfloorProperties properties = new UnderfloorProperties();
-        CsvReporter csvReporter = new CsvReporter();
+        UnderfloorSettings settings = UnderfloorSettings.getConfiguration();
+        ReporterDecider reporterDecider = new ReporterDecider();
 
         PumpAppliance pump;
         try {
 
             if (hostName.equals("raspberrypi")) {
-                pump = new PumpAppliance(properties.relaisType, properties.overrunMinutes, csvReporter);
+                pump = new PumpAppliance(settings.relaisType, settings.overrunMinutes, reporterDecider);
             } else {
-                pump = new PumpApplianceDummy(properties.relaisType, properties.overrunMinutes, csvReporter);
+                pump = new PumpApplianceDummy(settings.relaisType, settings.overrunMinutes, reporterDecider);
             }
         } catch (IOException | UnsupportedOperationException | InterruptedException ex) {
             logger.error(ex);
             return;
         }
+        reporterDecider.setPumpAppliance(pump);
 
         TemperatureSensors sensors;
         try {
             if (hostName.equals("raspberrypi")) {
-                sensors = new TemperatureSensors(properties.temp1, properties.temp2, properties.temp3);
+                sensors = new TemperatureSensors(settings.temp1, settings.temp2, settings.temp3);
                 sensors.ReadTemperatures();
             } else {
                 sensors = new TemperatureSensorsDummy();
@@ -65,7 +66,7 @@ public class UnderfloorManagement {
 
         AtagOne one;
         try {
-            one = new AtagOne(properties.atagEmail, properties.atagPassword);
+            one = new AtagOne(settings.atagEmail, settings.atagPassword);
         } catch (IOException ex) {
             logger.error(ex);
             return;
@@ -73,20 +74,20 @@ public class UnderfloorManagement {
 
         VBusLiveSystem vbus;
         try {
-            vbus = new VBusLiveSystem(properties.vbusApiUrl);
+            vbus = new VBusLiveSystem(settings.vbusApiUrl);
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException ex) {
             logger.error(ex);
             return;
         }
 
         Thread SystemMonitor = new Thread(() -> {
-            Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties, csvReporter);
+            Thread AtagOneMonitor = CreateAtagOneMonitorThread(one, reporterDecider);
             AtagOneMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
-            Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties, csvReporter);
+            Thread VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, reporterDecider);
             VBusSystemMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
-            Thread TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties, csvReporter);
+            Thread TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, reporterDecider);
             TemperatureSensorMonitor.setUncaughtExceptionHandler(new ThreadUncaughtExceptionHandler());
 
             AtagOneMonitor.start();
@@ -106,25 +107,25 @@ public class UnderfloorManagement {
                 if (!AtagOneMonitor.isAlive()) {
                     logger.error("AtagOneMonitor died. Restarting...");
 
-                    AtagOneMonitor = CreateAtagOneMonitorThread(one, pump, properties, csvReporter);
+                    AtagOneMonitor = CreateAtagOneMonitorThread(one, reporterDecider);
                     AtagOneMonitor.start();
                 }
 
                 if (!VBusSystemMonitor.isAlive()) {
                     logger.error("VBusSystemMonitor died. Restarting...");
 
-                    VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, pump, properties, csvReporter);
+                    VBusSystemMonitor = CreateVBusSystemMonitorThread(vbus, reporterDecider);
                     VBusSystemMonitor.start();
                 }
 
                 if (!TemperatureSensorMonitor.isAlive()) {
                     logger.error("TemperatureSensorMonitor died. Restarting...");
 
-                    TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, pump, properties, csvReporter);
+                    TemperatureSensorMonitor = CreateTemperatureSensorsThread(sensors, reporterDecider);
                     TemperatureSensorMonitor.start();
                 }
 
-                UnderfloorManagement.Sleep(properties.systemMonitorInterval);
+                UnderfloorManagement.Sleep(settings.systemMonitorInterval);
             }
         });
 
@@ -132,8 +133,8 @@ public class UnderfloorManagement {
         SystemMonitor.start();
     }
 
-    private static Thread CreateAtagOneMonitorThread(AtagOne one, PumpAppliance pump, UnderfloorProperties properties,
-            CsvReporter csvReporter) {
+    private static Thread CreateAtagOneMonitorThread(AtagOne one, ReporterDecider reporterDecider) {
+
         return new Thread(() -> {
             while (true) {
 
@@ -141,29 +142,17 @@ public class UnderfloorManagement {
 
                 try {
                     AtagOne.ValveMode mode = one.IsRunning();
-                    csvReporter.reportAtagValveMode(mode);
-                    switch (mode) {
-                        case running:
-                            pump.StartOrExtendPump();
-                            break;
-                        case fireplace:
-                            pump.StopPump();
-                            break;
-                        case off:
-                            break;
-                    }
-
+                    reporterDecider.reportAtagValveMode(mode);
                 } catch (IOException ex) {
                     logger.error(ex);
                 }
 
-                UnderfloorManagement.Sleep(properties.atagInterval);
+                UnderfloorManagement.Sleep(UnderfloorSettings.getConfiguration().atagInterval);
             }
         });
     }
 
-    private static Thread CreateVBusSystemMonitorThread(VBusLiveSystem vbus, PumpAppliance pump,
-            UnderfloorProperties properties, CsvReporter csvReporter) {
+    private static Thread CreateVBusSystemMonitorThread(VBusLiveSystem vbus, ReporterDecider reporterDecider) {
         return new Thread(() -> {
             while (true) {
 
@@ -172,10 +161,7 @@ public class UnderfloorManagement {
                 try {
                     VBusLiveSystemReading[] liveSystem = vbus.readLiveSystem();
                     String percentage = vbus.PercentagePumpBRunning(liveSystem);
-                    csvReporter.reportPercentagePwmB(percentage);
-                    if (!percentage.equals("0")) {
-                        pump.StartOrExtendPump();
-                    }
+                    reporterDecider.reportPercentagePwmB(percentage);
 
                 } catch (IOException ex) {
                     logger.error(ex);
@@ -183,13 +169,12 @@ public class UnderfloorManagement {
                     logger.error(e);
                 }
 
-                UnderfloorManagement.Sleep(properties.vbusInterval);
+                UnderfloorManagement.Sleep(UnderfloorSettings.getConfiguration().vbusInterval);
             }
         });
     }
 
-    private static Thread CreateTemperatureSensorsThread(TemperatureSensors sensors, PumpAppliance pump,
-            UnderfloorProperties properties, CsvReporter csvReporter) {
+    private static Thread CreateTemperatureSensorsThread(TemperatureSensors sensors, ReporterDecider reporterDecider) {
         return new Thread(() -> {
             while (true) {
 
@@ -198,17 +183,13 @@ public class UnderfloorManagement {
                 try {
                     TemperatureReading readings = sensors.ReadTemperatures();
                     if (readings != null) {
-                        csvReporter.reportTemperatureReading(readings);
-
-                        if (readings.getAanvoerTemp() > properties.tempThreshold) {
-                            pump.StartOrExtendPump();
-                        }
+                        reporterDecider.reportTemperatureReading(readings);
                     }
                 } catch (InterruptedException ex) {
                     logger.error("Crash in ReadTemperatures", ex);
                 }
 
-                UnderfloorManagement.Sleep(properties.tempInterval);
+                UnderfloorManagement.Sleep(UnderfloorSettings.getConfiguration().tempInterval);
             }
         });
     }

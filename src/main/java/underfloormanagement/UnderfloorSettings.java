@@ -21,9 +21,9 @@ import org.apache.logging.log4j.LogManager;
  *
  * @author lenne
  */
-public class UnderfloorProperties implements FileListener {
+public class UnderfloorSettings implements FileListener {
 
-    private static final Logger logger = LogManager.getLogger(UnderfloorProperties.class);
+    private static final Logger logger = LogManager.getLogger(UnderfloorSettings.class);
 
     public NoNc relaisType;
     public String atagEmail;
@@ -43,7 +43,21 @@ public class UnderfloorProperties implements FileListener {
     private static String defaultFilename = "config.properties";
     private static String filename = "config.properties";
 
-    public UnderfloorProperties() throws IOException {
+    private static UnderfloorSettings settings = null;
+
+    public static UnderfloorSettings getConfiguration() {
+        if (settings == null) {
+            try {
+                settings = new UnderfloorSettings();
+            } catch (IOException e) {
+                logger.error("Unable to read settings from file");
+            }
+        }
+
+        return settings;
+    }
+
+    private UnderfloorSettings() throws IOException {
         InitializeProperties();
     }
 
@@ -52,7 +66,7 @@ public class UnderfloorProperties implements FileListener {
         InputStream defaultInput = null;
         InputStream input = null;
         try {
-            defaultInput = UnderfloorProperties.class.getClassLoader().getResourceAsStream(defaultFilename);
+            defaultInput = UnderfloorSettings.class.getClassLoader().getResourceAsStream(defaultFilename);
             LoadProperties(properties, defaultInput);
 
             input = new FileInputStream(filename);
@@ -116,14 +130,12 @@ public class UnderfloorProperties implements FileListener {
 
     @Override
     public void fileCreated(FileChangeEvent fce) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void fileDeleted(FileChangeEvent fce) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose
-                                                                       // Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

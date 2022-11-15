@@ -36,7 +36,7 @@ public class PumpAppliance implements Runnable {
     public void extendThen() {
         pumpRunningUntil = LocalDateTime.now().plus(Duration.ofMinutes(this.overrunMinutes));
         logger.info("PumpAppliance running extended until: " + pumpRunningUntil.toString());
-        CsvReporter.reportPumpRunning(true);
+        reporterDecider.reportPumpRunning(true);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class PumpAppliance implements Runnable {
         while (pumpRunningUntil.isAfter(LocalDateTime.now())) {
             UnderfloorManagement.Sleep(1000);
         }
-        CsvReporter.reportPumpRunning(true);
+        reporterDecider.reportPumpRunning(true);
 
         logger.info("PumpAppliance stopping " + LocalDateTime.now().toString());
 
@@ -70,7 +70,7 @@ public class PumpAppliance implements Runnable {
             logger.error(ex);
         }
 
-        CsvReporter.reportPumpRunning(false);
+        reporterDecider.reportPumpRunning(false);
         logger.info("PumpAppliance stopped");
         logger.info("");
     }
@@ -90,7 +90,7 @@ public class PumpAppliance implements Runnable {
     private GpioPinDigitalOutput pin;
     private GpioController gpio;
 
-    CsvReporter CsvReporter;
+    ReporterDecider reporterDecider;
 
     /**
      * Instantiates the GPIO to control the pump
@@ -101,11 +101,11 @@ public class PumpAppliance implements Runnable {
      * @throws InterruptedException
      * @throws UnsupportedOperationException
      */
-    public PumpAppliance(NoNc relaisType, long overrunMinutes, CsvReporter csvReporter)
+    public PumpAppliance(NoNc relaisType, long overrunMinutes, ReporterDecider reporterDecider)
             throws IOException, InterruptedException, UnsupportedOperationException {
         this.relaisType = relaisType;
         this.overrunMinutes = overrunMinutes;
-        this.CsvReporter = csvReporter;
+        this.reporterDecider = reporterDecider;
         InitPump();
     }
 
